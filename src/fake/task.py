@@ -30,15 +30,18 @@ def create_task(task: TaskCreate) -> Task:
     return new_task
 
 
-def modify_task(task_id: int, updated_task: TaskCreate) -> Task:
+def modify_task(task_id: int, updated_task: TaskCreate) -> Task | None:
     """Modify a task in the database"""
     task = get_single_task(task_id)
-    task.description = updated_task.description
+    if task:
+        task.description = updated_task.description
     return task
 
 
-def delete_task(task_id: int) -> Task:
+def delete_task(task_id: int) -> Task | bool:
     """Delete a task from the database"""
     task = get_single_task(task_id)
-    _tasks.remove(task)
-    return task
+    if task:
+        _tasks.remove(task)
+        return task
+    return False
