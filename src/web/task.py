@@ -1,8 +1,9 @@
 from fastapi import APIRouter
-from fake import task as service
+from service import task as service
 from model.task import Task, TaskCreate
 
 router = APIRouter(prefix="/task")
+
 
 @router.get("")
 @router.get("/")
@@ -12,7 +13,7 @@ def get_all_tasks() -> list[Task]:
 
 
 @router.get("/{task_id}")
-def get_single_task(task_id: int) -> Task:
+def get_single_task(task_id: int) -> Task | None:
     """Return a single task if it exists"""
     return service.get_single_task(task_id)
 
