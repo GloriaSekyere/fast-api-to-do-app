@@ -1,12 +1,1 @@
-# General
 .DS_Store
-*.log
-*.pyc
-
-# Backend (FastAPI)
-backend/.venv/          # Ignore Python virtual environment
-backend/.env            # Ignore environment variables file
-backend/__pycache__/    # Ignore Python bytecode
-
-# Frontend (Next.js)
-frontend/node_modules/  # Ignore Node.js dependencies
