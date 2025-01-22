@@ -22,7 +22,7 @@ export default function AddTask({ onAddTask }) {
             />
             <button
                 onClick={handleAddTask}
-                className="w-full sm:w-auto bg-blue-500 text-white p-2 rounded hover:bg-blue-600 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                className="w-full sm:w-auto bg-orange-500 text-white p-2 rounded hover:bg-green-600 focus:ring-2 focus:ring-blue-400 focus:outline-none"
             >
                 Add Task
             </button>
