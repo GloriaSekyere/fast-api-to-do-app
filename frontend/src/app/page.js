@@ -1,14 +1,13 @@
-import { Fragment } from 'react';
 import Header from "@/components/layout/Header";
 import Main from "@/components/layout/Main";
 import Footer from "@/components/layout/Footer";
 
 export default function Home() {
   return (
-    <Fragment className="">
+    <div className="flex flex-col min-h-screen">
       <Header />
       <Main />
       <Footer />
-    </Fragment>
+    </div>
   );
 }
