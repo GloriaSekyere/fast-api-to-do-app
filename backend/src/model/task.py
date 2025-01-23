@@ -1,8 +1,14 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class Task(BaseModel):
     task_id: int
-    description: str
+    task: str
 
 class TaskCreate(BaseModel):
-    description: str
+    task: str = Field(
+        ...,
+        min_length=3,
+        max_length=100,
+        description="The task to be completed",
+        example="Buy groceries"
+    )
