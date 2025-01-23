@@ -7,7 +7,7 @@ def get_all_tasks() -> list[Task]:
     return data.get_all_tasks()
 
 
-def get_single_task(task_id: int) -> Task | None:
+def get_single_task(task_id: int) -> Task:
     """Return a single task if it exists"""
     return data.get_single_task(task_id)
 
@@ -17,11 +17,16 @@ def create_task(task: TaskCreate) -> Task:
     return data.create_task(task)
 
 
-def modify_task(task_id: int, updated_task: TaskCreate) -> Task | None:
+def modify_task(task_id: int, updated_task: TaskCreate) -> Task:
     """Modify a task if it exists"""
     return data.modify_task(task_id, updated_task)
 
 
-def delete_task(task_id: int) -> Task | bool:
+def delete_task(task_id: int) -> None:
     """Delete a task if it exsits"""
-    return data.delete_task(task_id)
+    data.delete_task(task_id)
+
+
+def delete_all_tasks() -> None:
+    """Delete all tasks"""
+    data.delete_all_tasks()
