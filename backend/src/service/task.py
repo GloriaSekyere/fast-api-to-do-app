@@ -1,4 +1,4 @@
-from fake import task as data
+from data import task as data
 from model.task import Task, TaskCreate
 
 
