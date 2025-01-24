@@ -10,5 +10,5 @@ class TaskCreate(BaseModel):
         min_length=3,
         max_length=100,
         description="The task to be completed",
-        example="Buy groceries"
+        json_schema_extra={"example": "Buy groceries"}
     )

@@ -1,5 +1,13 @@
-from data import task as data
+import os
+from dotenv import load_dotenv
 from model.task import Task, TaskCreate
+
+load_dotenv()
+
+if os.getenv("TODO_UNIT_TEST"):
+    from fake import task as data
+else:
+    from data import task as data
 
 
 def get_all_tasks() -> list[Task]:

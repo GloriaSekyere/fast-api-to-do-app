@@ -1,7 +1,15 @@
+import os
 from fastapi import APIRouter, HTTPException
-from service import task as service
-from model.task import Task, TaskCreate
+from dotenv import load_dotenv
 from error import Missing, Duplicate
+from model.task import Task, TaskCreate
+
+load_dotenv()
+if os.getenv("TODO_UNIT_TEST"):
+    from fake import task as service
+else:
+    from service import task as service
+
 
 router = APIRouter(prefix="/task")
 
