@@ -4,6 +4,7 @@ from pathlib import Path
 from sqlite3 import connect, Connection, Cursor, IntegrityError
 import os
 
+
 class Database:
     def __init__(self, db_name: str | None = None):
         self.conn: Connection | None = None

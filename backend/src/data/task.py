@@ -5,7 +5,7 @@ from error import Missing, Duplicate
 db.execute(
     """CREATE TABLE IF NOT EXISTS task (
     task_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    task TEXT NOT NULL)"""
+    task TEXT NOT NULL UNIQUE COLLATE NOCASE)"""
 )
 
 
@@ -54,10 +54,13 @@ def modify_task(task_id: int, updated_task: TaskCreate) -> Task:
              WHERE task_id = :task_id"""
     params = model_to_dict(updated_task)
     params["task_id"] = task_id
-    res = db.execute(qry, params)
-    if res.rowcount == 0:
-        raise Missing(msg=f"Task {task_id} not found")
-    return get_single_task(task_id)
+    try:
+        res = db.execute(qry, params)
+        if res.rowcount == 0:
+            raise Missing(msg=f"Task {task_id} not found")
+        return get_single_task(task_id)
+    except IntegrityError:
+        raise Duplicate(msg=f"Task {updated_task.task} already exists")
 
 
 def delete_task(task_id: int) -> None:
