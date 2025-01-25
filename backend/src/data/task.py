@@ -32,8 +32,6 @@ def get_all_tasks() -> list[Task]:
     qry = "SELECT * FROM task"
     db.execute(qry)
     rows = db.fetchall()
-    if not rows:
-        raise Missing(msg="No tasks found")
     return [row_to_model(row) for row in rows]
 
 
@@ -64,15 +62,15 @@ def modify_task(task_id: int, updated_task: TaskCreate) -> Task:
 
 
 def delete_task(task_id: int) -> None:
+    if not get_single_task(task_id):
+        raise Missing(msg=f"Task {task_id} not found")
     qry = "DELETE FROM task WHERE task_id = :task_id"
     params = {"task_id": task_id}
-    res = db.execute(qry, params)
-    if res.rowcount == 0:
-        raise Missing(msg=f"Task {task_id} not found")
+    db.execute(qry, params)
 
 
 def delete_all_tasks() -> None:
+    if not get_all_tasks():
+        raise Missing(msg=f"No tasks found")
     qry = "DELETE FROM task"
-    res = db.execute(qry)
-    if res.rowcount == 0:
-        raise Missing(msg="No tasks found")
+    db.execute(qry)

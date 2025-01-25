@@ -32,9 +32,9 @@ def modify_task(task_id: int, updated_task: TaskCreate) -> Task:
 
 def delete_task(task_id: int) -> None:
     """Delete a task if it exsits"""
-    data.delete_task(task_id)
+    return data.delete_task(task_id)
 
 
 def delete_all_tasks() -> None:
     """Delete all tasks"""
-    data.delete_all_tasks()
+    return data.delete_all_tasks()

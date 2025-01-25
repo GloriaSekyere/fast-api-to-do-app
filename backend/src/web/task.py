@@ -50,13 +50,15 @@ def modify_task(task_id: int, updated_task: TaskCreate) -> Task:
         return service.modify_task(task_id, updated_task)
     except Missing as exc:
         raise HTTPException(status_code=404, detail=exc.msg)
+    except Duplicate as exc:
+        raise HTTPException(status_code=409, detail=exc.msg)
 
 
 @router.delete("/{task_id}", status_code=204)
 def delete_task(task_id: int) -> None:
     """Delete a task if it exsits"""
     try:
-        service.delete_task(task_id)
+        return service.delete_task(task_id)
     except Missing as exc:
         raise HTTPException(status_code=404, detail=exc.msg)
 
@@ -64,8 +66,8 @@ def delete_task(task_id: int) -> None:
 @router.delete("", status_code=204)
 @router.delete("/", status_code=204)
 def delete_all_tasks() -> None:
-    """Delete all tasks"""
+    """Delete all tasks if they exist"""
     try:
-        service.delete_all_tasks()
+        return service.delete_all_tasks()
     except Missing as exc:
         raise HTTPException(status_code=404, detail=exc.msg)
