@@ -1,9 +1,12 @@
 # Data exceptions
+from model.task import TaskCreate
+
 
 class Missing(Exception):
-    def __init__(self, msg:str):
-        self.msg = msg
+    def __init__(self, task_id: int):
+        self.msg = f'Task with id "{task_id}" not found'
+
 
 class Duplicate(Exception):
-    def __init__(self, msg:str):
-        self.msg = msg
+    def __init__(self, task: TaskCreate):
+        self.msg = f'Task "{task.task}" already exists'

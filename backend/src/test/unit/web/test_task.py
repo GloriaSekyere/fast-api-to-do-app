@@ -1,88 +1,128 @@
+import os
 from fastapi import HTTPException
-import pytest
-
 from dotenv import load_dotenv
+import pytest
+from model.task import Task, TaskCreate
 
 load_dotenv()
-
-import os
-
 os.environ["TODO_UNIT_TEST"] = "true"
 
-from model.task import Task, TaskCreate
 from web import task
 
 
+# FIXTURES
+@pytest.fixture(autouse=True)
+def clear_database() -> None:
+    """Automatically clear the database before each test function."""
+    task.delete_all_tasks()
+
+
 @pytest.fixture
-def sample_new_task() -> TaskCreate:
+def new_task() -> TaskCreate:
+    """Provide a new task object for testing."""
     return TaskCreate(task="test task")
 
 
 @pytest.fixture
-def sample_single_task() -> Task:
-    return Task(task_id=6, task="test task")
+def created_task(new_task: TaskCreate) -> Task:
+    """Create and return a task in the database for testing."""
+    resp: Task = task.create_task(new_task)
+    return resp
 
 
 @pytest.fixture
-def sample_all_tasks() -> list[Task]:
-    return task.get_all_tasks()
+def modified_task() -> TaskCreate:
+    """Provide a modified task object for testing."""
+    return TaskCreate(task="modified task")
 
 
-def assert_duplicate(exc):
+# HELPERS
+def assert_duplicate(exc: HTTPException, task: TaskCreate) -> None:
     assert exc.value.status_code == 409
-    assert "Duplicate" in exc.value.msg
+    assert f'Task "{task.task}" already exists' in exc.value.detail
 
 
-def assert_missing(exc):
+def assert_missing(exc: HTTPException, task_id: int) -> None:
     assert exc.value.status_code == 404
-    assert "Missing" in exc.value.msg
+    assert f'Task with id "{task_id}" not found' in exc.value.detail
 
 
-def test_create_task(sample_new_task, sample_single_task):
-    assert task.create_task(sample_new_task) == sample_single_task
+# TESTS
+def test_create_task(new_task: TaskCreate) -> None:
+    """Test creating a new task."""
+    resp: Task = task.create_task(new_task)
+    assert hasattr(resp, "task_id")
+    assert resp.task == new_task.task
 
 
-def test_create_task_duplicate(sample_new_task):
+def test_create_task_duplicate(new_task: TaskCreate) -> None:
+    """Test creating a duplicate task raises an HTTPException."""
+    task.create_task(new_task)
     with pytest.raises(HTTPException) as exc:
-        task.create_task(sample_new_task)
-        assert_duplicate(exc)
+        task.create_task(new_task)
+    assert_duplicate(exc, new_task)
 
 
-def test_get_single_task(sample_single_task):
-    assert task.get_single_task(sample_single_task.task_id) == sample_single_task
+def test_get_single_task(created_task: Task) -> None:
+    """Test retrieving a single task by ID."""
+    resp: Task = task.get_single_task(created_task.task_id)
+    assert resp == created_task
 
 
-def test_get_single_task_missing():
+def test_get_single_task_missing() -> None:
+    """Test retrieving a task that does not exist raises an HTTPException."""
     with pytest.raises(HTTPException) as exc:
-        task.get_single_task(10)
-        assert_missing(exc)
+        task.get_single_task(-1)
+    assert_missing(exc, -1)
 
 
-def test_modify_task(sample_single_task):
-    assert (
-        task.modify_task(sample_single_task.task_id, sample_single_task)
-        == sample_single_task
-    )
+def test_get_all_tasks(created_task: Task) -> None:
+    """Test retrieving all tasks when there is at least one task."""
+    resp: list[Task] = task.get_all_tasks()
+    assert resp == [created_task]
 
 
-def test_modify_task_missing():
+def test_get_all_tasks_empty() -> None:
+    """Test retrieving all tasks when there are no tasks."""
+    resp: list[Task] = task.get_all_tasks()
+    assert resp == []
+
+
+def test_modify_task(created_task: Task, modified_task: TaskCreate) -> None:
+    """Test modifying an existing task."""
+    resp: Task = task.modify_task(created_task.task_id, modified_task)
+    assert resp.task == modified_task.task
+
+
+def test_modify_task_missing(modified_task: TaskCreate) -> None:
+    """Test modifying a task that does not exist raises an HTTPException."""
     with pytest.raises(HTTPException) as exc:
-        thing = Task(task_id=10, task="task that does not exist")
-        task.modify_task(thing.task_id, thing)
-        assert_missing(exc)
+        task.modify_task(-1, modified_task)
+    assert_missing(exc, -1)
 
 
-def test_delete_task(sample_single_task):
-    assert task.delete_task(sample_single_task.task_id) is None
+def test_delete_task(created_task: Task) -> None:
+    """Test deleting an existing task."""
+    resp: None = task.delete_task(created_task.task_id)
+    assert resp is None
 
 
-def test_delete_task_missing(sample_single_task):
+def test_delete_task_missing() -> None:
+    """Test deleting a task that does not exist raises an HTTPException."""
     with pytest.raises(HTTPException) as exc:
-        task.delete_task(sample_single_task.task_id)
-        assert_missing(exc)
+        task.delete_task(-1)
+    assert_missing(exc, -1)
 
 
-def test_delete_all_tasks_missing():
-    with pytest.raises(HTTPException) as exc:
-        task.delete_all_tasks()
-        assert_missing(exc)
+def test_delete_all_tasks(created_task: Task) -> None:
+    """Test deleting all tasks when there is at least one task."""
+    assert task.get_all_tasks() == [created_task]
+    task.delete_all_tasks()
+    assert task.get_all_tasks() == []
+
+
+def test_delete_all_tasks_empty() -> None:
+    """Test deleting all tasks when there are no tasks."""
+    assert task.get_all_tasks() == []
+    task.delete_all_tasks()
+    assert task.get_all_tasks() == []

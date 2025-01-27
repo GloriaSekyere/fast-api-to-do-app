@@ -24,7 +24,7 @@ def get_single_task(task_id: int) -> Task:
     db.execute(qry, params)
     row = db.fetchone()
     if not row:
-        raise Missing(f"Task with id {task_id} not found")
+        raise Missing(task_id)
     return row_to_model(row)
 
 
@@ -43,34 +43,32 @@ def create_task(task: TaskCreate) -> Task:
         task_id = db.lastrowid()
         return get_single_task(task_id)
     except IntegrityError:
-        raise Duplicate(msg=f"Task {task.task} already exists")
+        raise Duplicate(task)
 
 
-def modify_task(task_id: int, updated_task: TaskCreate) -> Task:
+def modify_task(task_id: int, modified_task: TaskCreate) -> Task:
     qry = """UPDATE task
              SET task = :task
              WHERE task_id = :task_id"""
-    params = model_to_dict(updated_task)
+    params = model_to_dict(modified_task)
     params["task_id"] = task_id
     try:
         res = db.execute(qry, params)
         if res.rowcount == 0:
-            raise Missing(msg=f"Task {task_id} not found")
+            raise Missing(task_id)
         return get_single_task(task_id)
     except IntegrityError:
-        raise Duplicate(msg=f"Task {updated_task.task} already exists")
+        raise Duplicate(modified_task)
 
 
 def delete_task(task_id: int) -> None:
-    if not get_single_task(task_id):
-        raise Missing(msg=f"Task {task_id} not found")
     qry = "DELETE FROM task WHERE task_id = :task_id"
     params = {"task_id": task_id}
-    db.execute(qry, params)
+    result = db.execute(qry, params)
+    if result.rowcount == 0:
+        raise Missing(task_id)
 
 
 def delete_all_tasks() -> None:
-    if not get_all_tasks():
-        raise Missing(msg=f"No tasks found")
     qry = "DELETE FROM task"
     db.execute(qry)

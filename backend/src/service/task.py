@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 from model.task import Task, TaskCreate
 
 load_dotenv()
-
 if os.getenv("TODO_UNIT_TEST"):
     from fake import task as data
 else:
@@ -21,17 +20,17 @@ def get_single_task(task_id: int) -> Task:
 
 
 def create_task(task: TaskCreate) -> Task:
-    """Add a new task"""
+    """Add a new task to the database"""
     return data.create_task(task)
 
 
-def modify_task(task_id: int, updated_task: TaskCreate) -> Task:
+def modify_task(task_id: int, modified_task: TaskCreate) -> Task:
     """Modify a task if it exists"""
-    return data.modify_task(task_id, updated_task)
+    return data.modify_task(task_id, modified_task)
 
 
 def delete_task(task_id: int) -> None:
-    """Delete a task if it exsits"""
+    """Delete a task if it exists"""
     return data.delete_task(task_id)
 
 

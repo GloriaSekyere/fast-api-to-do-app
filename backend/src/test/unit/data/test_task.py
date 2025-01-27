@@ -4,64 +4,111 @@ from dotenv import load_dotenv
 from model.task import Task, TaskCreate
 from error import Missing, Duplicate
 
-# set this before data imports below for data.init
+# Set environment variable for in-memory database
 load_dotenv()
 os.environ["TODO_SQLITE_DB"] = ":memory:"
 from data import task
 
 
+# FIXTURES
+@pytest.fixture(autouse=True)
+def clear_database() -> None:
+    """Automatically clear the database before each test."""
+    task.delete_all_tasks()
+
+
 @pytest.fixture
-def sample_new_task() -> TaskCreate:
+def new_task() -> TaskCreate:
+    """Provide a new task for testing."""
     return TaskCreate(task="test task")
 
 
 @pytest.fixture
-def created_task(sample_new_task) -> Task:
-    resp = task.create_task(sample_new_task)
-    return resp
+def created_task(new_task: TaskCreate) -> Task:
+    """Create and return a task for testing."""
+    return task.create_task(new_task)
 
 
 @pytest.fixture
-def sample_modified_task() -> TaskCreate:
+def modified_task() -> TaskCreate:
+    """Provide a modified task for testing."""
     return TaskCreate(task="modified task")
 
 
-@pytest.fixture
-def sample_all_tasks() -> list[Task]:
-    return task.get_all_tasks()
-
-
-def test_create_task(sample_new_task):
-    resp = task.create_task(sample_new_task)
+# TESTS
+def test_create_task(new_task: TaskCreate) -> None:
+    """Test creating a new task."""
+    resp = task.create_task(new_task)
     assert hasattr(resp, "task_id")
-    assert resp.task == sample_new_task.task
+    assert resp.task == new_task.task
 
 
-def test_get_one(created_task):
+def test_create_task_duplicate(new_task: TaskCreate) -> None:
+    """Test creating a duplicate task raises a Duplicate exception."""
+    task.create_task(new_task)
+    with pytest.raises(Duplicate):
+        task.create_task(new_task)
+
+
+def test_get_single_task(created_task: Task) -> None:
+    """Test retrieving a single task by ID."""
     resp = task.get_single_task(created_task.task_id)
     assert resp == created_task
 
 
-def test_get_one_missing():
+def test_get_single_task_missing() -> None:
+    """Test retrieving a non-existent task raises a Missing exception."""
     with pytest.raises(Missing):
-        _ = task.get_single_task(10)
+        task.get_single_task(-1)
 
 
-def test_modify(created_task, sample_modified_task):
-    resp = task.modify_task(created_task.task_id, sample_modified_task)
-    assert resp.task == sample_modified_task.task
+def test_get_all_tasks(created_task: Task) -> None:
+    """Test retrieving all tasks when tasks exist."""
+    resp = task.get_all_tasks()
+    assert resp == [created_task]
 
 
-def test_modify_missing(sample_modified_task):
+def test_get_all_tasks_empty() -> None:
+    """Test retrieving all tasks when no tasks exist."""
+    resp = task.get_all_tasks()
+    assert resp == []
+
+
+def test_modify(created_task: Task, modified_task: TaskCreate) -> None:
+    """Test modifying an existing task."""
+    resp = task.modify_task(created_task.task_id, modified_task)
+    assert resp.task == modified_task.task
+
+
+def test_modify_missing(modified_task: TaskCreate) -> None:
+    """Test modifying a non-existent task raises a Missing exception."""
     with pytest.raises(Missing):
-        _ = task.modify_task(10, sample_modified_task)
+        task.modify_task(-1, modified_task)
 
 
-def test_delete(created_task):
+def test_delete(created_task: Task) -> None:
+    """Test deleting an existing task."""
     resp = task.delete_task(created_task.task_id)
     assert resp is None
 
 
-def test_delete_missing():
+def test_delete_missing() -> None:
+    """Test deleting a non-existent task raises a Missing exception."""
     with pytest.raises(Missing):
-        _ = task.delete_task(10)
+        task.delete_task(-1)
+
+
+def test_delete_all_tasks(created_task: Task) -> None:
+    """Test deleting all tasks when tasks exist."""
+    assert task.get_all_tasks() == [created_task]
+    resp = task.delete_all_tasks()
+    assert resp is None
+    assert task.get_all_tasks() == []
+
+
+def test_delete_all_tasks_empty() -> None:
+    """Test deleting all tasks when no tasks exist."""
+    assert task.get_all_tasks() == []
+    resp = task.delete_all_tasks()
+    assert resp is None
+    assert task.get_all_tasks() == []

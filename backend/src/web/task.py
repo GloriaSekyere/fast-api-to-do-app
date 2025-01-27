@@ -5,6 +5,7 @@ from error import Missing, Duplicate
 from model.task import Task, TaskCreate
 
 load_dotenv()
+
 if os.getenv("TODO_UNIT_TEST"):
     from fake import task as service
 else:
@@ -36,7 +37,7 @@ def get_all_tasks() -> list[Task]:
 @router.post("", status_code=201)
 @router.post("/", status_code=201)
 def create_task(task: TaskCreate) -> Task:
-    """Add a new task"""
+    """Add a new task to the database"""
     try:
         return service.create_task(task)
     except Duplicate as exc:
@@ -44,10 +45,10 @@ def create_task(task: TaskCreate) -> Task:
 
 
 @router.patch("/{task_id}", status_code=200)
-def modify_task(task_id: int, updated_task: TaskCreate) -> Task:
+def modify_task(task_id: int, modified_task: TaskCreate) -> Task:
     """Modify a task if it exists"""
     try:
-        return service.modify_task(task_id, updated_task)
+        return service.modify_task(task_id, modified_task)
     except Missing as exc:
         raise HTTPException(status_code=404, detail=exc.msg)
     except Duplicate as exc:
@@ -56,9 +57,9 @@ def modify_task(task_id: int, updated_task: TaskCreate) -> Task:
 
 @router.delete("/{task_id}", status_code=204)
 def delete_task(task_id: int) -> None:
-    """Delete a task if it exsits"""
+    """Delete a task from the database if it exists"""
     try:
-        return service.delete_task(task_id)
+        service.delete_task(task_id)
     except Missing as exc:
         raise HTTPException(status_code=404, detail=exc.msg)
 
@@ -66,8 +67,5 @@ def delete_task(task_id: int) -> None:
 @router.delete("", status_code=204)
 @router.delete("/", status_code=204)
 def delete_all_tasks() -> None:
-    """Delete all tasks if they exist"""
-    try:
-        return service.delete_all_tasks()
-    except Missing as exc:
-        raise HTTPException(status_code=404, detail=exc.msg)
+    """Delete all tasks from the database"""
+    service.delete_all_tasks()

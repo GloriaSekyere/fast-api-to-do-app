@@ -1,13 +1,8 @@
 from model.task import Task, TaskCreate
 from error import Missing, Duplicate
 
-_tasks = [
-    Task(task_id=1, task="Make grocery list"),
-    Task(task_id=2, task="Close bank account"),
-    Task(task_id=3, task="Call plumber"),
-    Task(task_id=4, task="Meet with consultant"),
-    Task(task_id=5, task="Review monthly expenses")
-]
+_tasks: list[Task] = []
+
 
 def find(task_id: int) -> Task | None:
     for t in _tasks:
@@ -16,19 +11,14 @@ def find(task_id: int) -> Task | None:
     return None
 
 
-def check_duplicate(task_id: int) -> None:
-    if find(task_id):
-        raise Duplicate(msg="Task already exists")
+def check_duplicate(current_task: Task, modified_task: TaskCreate) -> None:
+    if current_task.task == modified_task.task:
+        raise Duplicate(modified_task)
 
 
 def check_missing(task_id: int) -> None:
     if not find(task_id):
-        raise Missing(msg="Task not found")
-
-
-def check_empty() -> None:
-    if not _tasks:
-        raise Missing(msg="No tasks found")
+        raise Missing(task_id)
 
 
 def get_all_tasks() -> list[Task]:
@@ -44,18 +34,24 @@ def get_single_task(task_id: int) -> Task:
 
 def create_task(task: TaskCreate) -> Task:
     """Add a new task to the database"""
-    new_task = Task(task_id=6, task=task.task)
-    check_duplicate(new_task.task_id)
+    # Determine the next available task_id
+    next_task_id = max(t.task_id for t in _tasks) + 1 if _tasks else 1
+    new_task = Task(task_id=next_task_id, task=task.task)
+
+    # Check for duplicates
+    for t in _tasks:
+        check_duplicate(t, new_task)
+
     _tasks.append(new_task)
     return new_task
 
 
-def modify_task(task_id: int, updated_task: TaskCreate) -> Task | None:
+def modify_task(task_id: int, modified_task: TaskCreate) -> Task:
     """Modify a task in the database"""
     check_missing(task_id)
     task = find(task_id)
-    if task:
-        task.task = updated_task.task
+    check_duplicate(task, modified_task)
+    task.task = modified_task.task
     return task
 
 
@@ -63,11 +59,9 @@ def delete_task(task_id: int) -> None:
     """Delete a task from the database"""
     check_missing(task_id)
     task = find(task_id)
-    if task:
-        return _tasks.remove(task)
+    _tasks.remove(task)
 
 
 def delete_all_tasks() -> None:
     """Delete all tasks from the database"""
-    check_empty()
-    return _tasks.clear()
+    _tasks.clear()
