@@ -1,5 +1,5 @@
 from model.task import Task, TaskCreate
-from error import Missing, Duplicate
+from error import MissingTask, DuplicateTask
 
 _tasks: list[Task] = []
 
@@ -13,12 +13,12 @@ def find(task_id: int) -> Task | None:
 
 def check_duplicate(current_task: Task, modified_task: TaskCreate) -> None:
     if current_task.task == modified_task.task:
-        raise Duplicate(modified_task)
+        raise DuplicateTask(modified_task)
 
 
 def check_missing(task_id: int) -> None:
     if not find(task_id):
-        raise Missing(task_id)
+        raise MissingTask(task_id)
 
 
 def get_all_tasks() -> list[Task]:

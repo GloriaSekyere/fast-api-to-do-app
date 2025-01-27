@@ -1,7 +1,7 @@
 import os
 from fastapi import APIRouter, HTTPException
 from dotenv import load_dotenv
-from error import Missing, Duplicate
+from error import MissingTask, DuplicateTask
 from model.task import Task, TaskCreate
 
 load_dotenv()
@@ -20,7 +20,7 @@ def get_single_task(task_id: int) -> Task:
     """Return a single task if it exists"""
     try:
         return service.get_single_task(task_id)
-    except Missing as exc:
+    except MissingTask as exc:
         raise HTTPException(status_code=404, detail=exc.msg)
 
 
@@ -30,7 +30,7 @@ def get_all_tasks() -> list[Task]:
     """Return list of all tasks"""
     try:
         return service.get_all_tasks()
-    except Missing as exc:
+    except MissingTask as exc:
         raise HTTPException(status_code=404, detail=exc.msg)
 
 
@@ -40,7 +40,7 @@ def create_task(task: TaskCreate) -> Task:
     """Add a new task to the database"""
     try:
         return service.create_task(task)
-    except Duplicate as exc:
+    except DuplicateTask as exc:
         raise HTTPException(status_code=409, detail=exc.msg)
 
 
@@ -49,9 +49,9 @@ def modify_task(task_id: int, modified_task: TaskCreate) -> Task:
     """Modify a task if it exists"""
     try:
         return service.modify_task(task_id, modified_task)
-    except Missing as exc:
+    except MissingTask as exc:
         raise HTTPException(status_code=404, detail=exc.msg)
-    except Duplicate as exc:
+    except DuplicateTask as exc:
         raise HTTPException(status_code=409, detail=exc.msg)
 
 
@@ -60,7 +60,7 @@ def delete_task(task_id: int) -> None:
     """Delete a task from the database if it exists"""
     try:
         service.delete_task(task_id)
-    except Missing as exc:
+    except MissingTask as exc:
         raise HTTPException(status_code=404, detail=exc.msg)
 
 

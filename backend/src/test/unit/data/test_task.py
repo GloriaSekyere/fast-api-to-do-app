@@ -2,7 +2,7 @@ import os
 import pytest
 from dotenv import load_dotenv
 from model.task import Task, TaskCreate
-from error import Missing, Duplicate
+from error import MissingTask, DuplicateTask
 
 # Set environment variable for in-memory database
 load_dotenv()
@@ -46,7 +46,7 @@ def test_create_task(new_task: TaskCreate) -> None:
 def test_create_task_duplicate(new_task: TaskCreate) -> None:
     """Test creating a duplicate task raises a Duplicate exception."""
     task.create_task(new_task)
-    with pytest.raises(Duplicate):
+    with pytest.raises(DuplicateTask):
         task.create_task(new_task)
 
 
@@ -58,7 +58,7 @@ def test_get_single_task(created_task: Task) -> None:
 
 def test_get_single_task_missing() -> None:
     """Test retrieving a non-existent task raises a Missing exception."""
-    with pytest.raises(Missing):
+    with pytest.raises(MissingTask):
         task.get_single_task(-1)
 
 
@@ -82,7 +82,7 @@ def test_modify(created_task: Task, modified_task: TaskCreate) -> None:
 
 def test_modify_missing(modified_task: TaskCreate) -> None:
     """Test modifying a non-existent task raises a Missing exception."""
-    with pytest.raises(Missing):
+    with pytest.raises(MissingTask):
         task.modify_task(-1, modified_task)
 
 
@@ -94,7 +94,7 @@ def test_delete(created_task: Task) -> None:
 
 def test_delete_missing() -> None:
     """Test deleting a non-existent task raises a Missing exception."""
-    with pytest.raises(Missing):
+    with pytest.raises(MissingTask):
         task.delete_task(-1)
 
 

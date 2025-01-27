@@ -1,6 +1,6 @@
 from .init import db, IntegrityError
 from model.task import Task, TaskCreate
-from error import Missing, Duplicate
+from error import MissingTask, DuplicateTask
 
 db.execute(
     """CREATE TABLE IF NOT EXISTS task (
@@ -24,7 +24,7 @@ def get_single_task(task_id: int) -> Task:
     db.execute(qry, params)
     row = db.fetchone()
     if not row:
-        raise Missing(task_id)
+        raise MissingTask(task_id)
     return row_to_model(row)
 
 
@@ -43,7 +43,7 @@ def create_task(task: TaskCreate) -> Task:
         task_id = db.lastrowid()
         return get_single_task(task_id)
     except IntegrityError:
-        raise Duplicate(task)
+        raise DuplicateTask(task)
 
 
 def modify_task(task_id: int, modified_task: TaskCreate) -> Task:
@@ -55,10 +55,10 @@ def modify_task(task_id: int, modified_task: TaskCreate) -> Task:
     try:
         res = db.execute(qry, params)
         if res.rowcount == 0:
-            raise Missing(task_id)
+            raise MissingTask(task_id)
         return get_single_task(task_id)
     except IntegrityError:
-        raise Duplicate(modified_task)
+        raise DuplicateTask(modified_task)
 
 
 def delete_task(task_id: int) -> None:
@@ -66,7 +66,7 @@ def delete_task(task_id: int) -> None:
     params = {"task_id": task_id}
     result = db.execute(qry, params)
     if result.rowcount == 0:
-        raise Missing(task_id)
+        raise MissingTask(task_id)
 
 
 def delete_all_tasks() -> None:
