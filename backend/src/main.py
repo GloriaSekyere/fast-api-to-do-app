@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-import uvicorn
 from web.task import router as task_router
 from web.user import router as user_router
 
@@ -15,4 +14,6 @@ def root():
 
 
 if __name__ == "__main__":
+    import uvicorn
+
     uvicorn.run("main:app", reload=True)

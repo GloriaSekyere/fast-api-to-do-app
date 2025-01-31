@@ -29,6 +29,16 @@ def get_single_user(user_id: int) -> User:
     return row_to_model(row)
 
 
+def get_user_by_name(name: str) -> User:
+    qry = "SELECT * FROM user WHERE name = :name"
+    params = {"name": name}
+    db.execute(qry, params)
+    row = db.fetchone()
+    if not row:
+        raise MissingUser(name)
+    return row_to_model(row)
+
+
 def get_all_users() -> list[User]:
     qry = "SELECT * FROM user"
     db.execute(qry)

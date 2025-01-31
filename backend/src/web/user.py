@@ -1,6 +1,8 @@
 import os
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from model.user import User, UserCreate, UserUpdate
+from datetime import timedelta
 
 if os.getenv("TODO_UNIT_TEST"):
     from fake import user as service
@@ -9,7 +11,42 @@ else:
 from error import MissingUser, DuplicateUser
 
 
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
 router = APIRouter(prefix="/user")
+
+
+# This dependency makes a post to "/user/token"
+# (from a form containing a username and password)
+# and returns an access token.
+oauth2_dep = OAuth2PasswordBearer(tokenUrl="token")
+
+
+def unauthed():
+    raise HTTPException(
+        status_code=401,
+        detail="Incorrect name or password",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
+# This endpoint is directed to by any call that has the
+# oauth2_dep() dependency:
+@router.post("/token")
+def create_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    """Get username and password from OAuth form, return access token"""
+    user = service.auth_user(form_data.username, form_data.password)
+    if not user:
+        unauthed()
+    expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = service.create_access_token(data={"sub": user.name}, expires=expires)
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.get("/token")
+def get_access_token(token: str = Depends(oauth2_dep)) -> dict:
+    """Return the current access token"""
+    return {"token": token}
 
 
 @router.get("")
